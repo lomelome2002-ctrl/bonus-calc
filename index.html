@@ -7,29 +7,26 @@
     <style>
         :root { --primary: #1e3a8a; --secondary: #334155; --accent: #be123c; }
         body { font-family: "Microsoft JhengHei", sans-serif; margin: 0; background-color: #f1f5f9; }
-        
-        /* 頁籤樣式 */
         .tabs { display: flex; background: var(--primary); padding: 10px 10px 0; gap: 5px; position: sticky; top: 0; z-index: 1000; }
-        .tab-btn { padding: 12px 25px; border: none; background: #3b82f6; color: white; cursor: pointer; border-radius: 8px 8px 0 0; font-weight: bold; transition: 0.3s; }
+        .tab-btn { padding: 12px 25px; border: none; background: #3b82f6; color: white; cursor: pointer; border-radius: 8px 8px 0 0; font-weight: bold; }
         .tab-btn.active { background: white; color: var(--primary); }
         .tab-content { display: none; padding: 20px; }
         .tab-content.active { display: block; }
-
-        /* 參數設定區 */
-        .config-panel { background: #fff7ed; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #fed7aa; }
-        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin-top: 10px; }
-        .rank-input-group { display: flex; flex-direction: column; align-items: center; font-size: 0.8em; color: #9a3412; }
-        .rank-input-group input { width: 80px; margin-top: 4px; border: 1px solid #fdba74; }
-
-        .container { max-width: 1350px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .container { max-width: 1400px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h2 { color: var(--primary); text-align: center; margin-bottom: 20px; font-weight: 900; }
-        .summary-box { display: flex; justify-content: space-around; background: #f8fafc; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 2px solid #e2e8f0; }
         
-        table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: right; }
+        .config-panel { background: #fff7ed; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #fed7aa; }
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-top: 10px; }
+        .rank-input-group { display: flex; flex-direction: column; align-items: center; font-size: 0.8em; color: #9a3412; }
+        .rank-input-group input { width: 90px; margin-top: 4px; border: 1px solid #fdba74; padding: 4px; text-align: right; }
+
+        .summary-box { display: flex; justify-content: space-around; background: #f8fafc; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 2px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { border: 1px solid #cbd5e1; padding: 8px 4px; text-align: right; }
         th { background: var(--secondary); color: white; text-align: center; }
-        input { width: 90%; padding: 6px; border: 1px solid #e2e8f0; border-radius: 4px; text-align: center; font-weight: bold; }
+        input { width: 90%; padding: 6px; border: 1px solid #e2e8f0; border-radius: 4px; text-align: center; font-weight: bold; font-family: inherit; }
         .readonly-cell { background-color: #f8fafc; color: #475569; font-weight: bold; }
+        .rank-amt-show { font-size: 0.85em; color: #7c2d12; display: block; margin-top: 2px; }
         .btn { padding: 8px 16px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; color: white; margin: 5px; }
 
         @media print {
@@ -55,9 +52,8 @@
         <h2>各分署團體獎勵金數額分配表</h2>
 
         <div class="config-panel">
-            <strong style="color:#9a3412">⚙️ 名次獎金基準設定 (可編輯各名次分配金額)</strong>
-            <div class="config-grid" id="rankConfigs">
-                </div>
+            <strong style="color:#9a3412">⚙️ 名次獎金基準設定 (A欄評比獎金將依此設定自動帶入)</strong>
+            <div class="config-grid" id="rankConfigs"></div>
         </div>
 
         <div class="summary-box">
@@ -69,21 +65,20 @@
             <button class="btn" style="background:#3b82f6" onclick="window.print()">🖨️ 列印分配表</button>
         </div>
 
-        <table id="t1-table">
+        <table>
             <thead>
                 <tr>
-                    <th rowspan="2" width="8%">分署</th>
-                    <th colspan="3">執行績效獎勵金 (A)</th>
+                    <th rowspan="2" width="6%">分署</th>
+                    <th colspan="4">執行績效獎勵金 (A)</th>
                     <th colspan="3">署長權限分配 (B)</th>
-                    <th rowspan="2" width="12%">總額(A+B)</th>
+                    <th rowspan="2" width="10%">總額(A+B)</th>
                 </tr>
-                <tr style="background:#475569; font-size:0.85em">
-                    <th width="12%">績效獎金</th><th width="8%">評比名次</th><th width="12%">小計A</th>
-                    <th width="12%">平均預設</th><th width="12%">增減調整</th><th width="12%">小計B</th>
+                <tr style="background:#475569; font-size:0.8em">
+                    <th width="10%">績效獎金</th><th width="8%">評比名次</th><th width="10%">評比獎金</th><th width="10%">小計A</th>
+                    <th width="10%">平均預設</th><th width="10%">增減調整</th><th width="10%">小計B</th>
                 </tr>
             </thead>
-            <tbody id="t1-body">
-                </tbody>
+            <tbody id="t1-body"></tbody>
         </table>
     </div>
 </div>
@@ -109,7 +104,7 @@
                 <tr style="background:#f8fafc; font-weight:bold"><td colspan="6" style="text-align:right">合計：</td><td id="t2-total" style="color:red">0</td><td></td></tr>
             </tfoot>
         </table>
-        <button class="btn" style="background:#10b981; margin-top:10px" onclick="addT2Row('', '', 200000)">➕ 新增職位/接任人員</button>
+        <button class="btn" style="background:#10b981; margin-top:10px" onclick="addT2Row('', '', 200000)">➕ 新增人員</button>
     </div>
 </div>
 
@@ -123,26 +118,16 @@
 
     // --- 工具一邏輯 ---
     const branches = ["台北", "士林", "新北", "桃園", "新竹", "台中", "彰化", "嘉義", "台南", "高雄", "屏東", "花蓮", "宜蘭"];
-    // 預設名次獎金 (第1名到第13名)
     const defaultRankPay = [496365, 496365, 453610, 396070, 381685, 367300, 352915, 338530, 319685, 305300, 290915, 262145, 262145];
-    // 預設執行績效獎金
     const defaultPerfPay = [1747631, 1190195, 2165752, 2073353, 1265802, 1998116, 816532, 883721, 900968, 1689321, 728757, 583540, 660902];
-    // 預設名次
     const defaultRanks = [2, 9, 5, 1, 3, 4, 12, 11, 13, 10, 6, 8, 7];
 
     function initT1() {
-        // 生成名次參數輸入框
         const configGrid = document.getElementById('rankConfigs');
         defaultRankPay.forEach((amt, i) => {
-            configGrid.innerHTML += `
-                <div class="rank-input-group">
-                    第${i+1}名獎金
-                    <input type="number" class="rank-base" data-idx="${i+1}" value="${amt}" oninput="calcT1()">
-                </div>
-            `;
+            configGrid.innerHTML += `<div class="rank-input-group">第${i+1}名<input type="number" class="rank-base" data-idx="${i+1}" value="${amt}" oninput="calcT1()"></div>`;
         });
 
-        // 生成分署資料行
         const body = document.getElementById('t1-body');
         const avgB = Math.floor(2386370 / 13);
         const remB = 2386370 % 13;
@@ -154,6 +139,7 @@
                 <td style="text-align:center; font-weight:bold">${name}</td>
                 <td><input type="number" class="t1-perf" value="${defaultPerfPay[i]}" oninput="calcT1()"></td>
                 <td><input type="number" class="t1-rank" value="${defaultRanks[i]}" oninput="calcT1()"></td>
+                <td class="readonly-cell t1-rank-pay">0</td>
                 <td class="readonly-cell t1-subA">0</td>
                 <td class="readonly-cell t1-avgB">${vB_avg}</td>
                 <td><input type="number" class="t1-adjB" value="0" oninput="calcT1()"></td>
@@ -166,7 +152,6 @@
     }
 
     function calcT1() {
-        // 獲取目前的各名次獎金設定
         const rankMap = {};
         document.querySelectorAll('.rank-base').forEach(input => {
             rankMap[input.dataset.idx] = parseFloat(input.value) || 0;
@@ -175,34 +160,26 @@
         let sumB = 0;
         document.querySelectorAll('#t1-body tr').forEach(row => {
             const perf = parseFloat(row.querySelector('.t1-perf').value) || 0;
-            const rank = parseInt(row.querySelector('.t1-rank').value) || 1;
-            const rankAmt = rankMap[rank] || 0;
+            const rankNum = parseInt(row.querySelector('.t1-rank').value) || 1;
+            const rankPay = rankMap[rankNum] || 0;
             
-            // 小計 A = 績效獎金 + 對應名次獎金
-            const subA = perf + rankAmt;
+            row.querySelector('.t1-rank-pay').innerText = rankPay.toLocaleString();
+            const subA = perf + rankPay;
             row.querySelector('.t1-subA').innerText = subA.toLocaleString();
 
-            // 小計 B = 平均預設 + 增減調整
             const avgB = parseFloat(row.querySelector('.t1-avgB').innerText) || 0;
             const adjB = parseFloat(row.querySelector('.t1-adjB').value) || 0;
             const subB = avgB + adjB;
             row.querySelector('.t1-subB').innerText = subB.toLocaleString();
             sumB += subB;
 
-            // 總額 = A + B
             row.querySelector('.t1-total').innerText = (subA + subB).toLocaleString();
-
-            // 備份文字供列印
-            row.querySelectorAll('input').forEach(input => {
-                const span = document.createElement('span'); span.className = 'val-text';
-                span.innerText = input.value;
-                // 此處簡單處理：列印時顯示文字
-            });
         });
 
         const remain = 2386370 - sumB;
-        document.getElementById('t1-rem').innerText = "$" + remain.toLocaleString();
-        document.getElementById('t1-rem').style.color = (remain === 0) ? "green" : "red";
+        const remEl = document.getElementById('t1-rem');
+        remEl.innerText = "$" + remain.toLocaleString();
+        remEl.style.color = (remain === 0) ? "green" : "red";
     }
 
     // --- 工具二邏輯 ---
@@ -226,14 +203,14 @@
 
     function calcT2() {
         const year = parseInt(document.getElementById('t2-year').value);
-        const daysInYear = ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0) ? 366 : 365;
+        const days = ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0) ? 366 : 365;
         let total = 0;
         document.querySelectorAll('#t2-body tr').forEach(row => {
             const cap = parseFloat(row.querySelector('.t2-cap').value) || 0;
             const start = new Date(row.querySelector('.t2-s').value);
             const end = new Date(row.querySelector('.t2-e').value);
             let d = (end >= start) ? Math.ceil((end - start) / 86400000) + 1 : 0;
-            const amt = Math.round(cap * (d / daysInYear));
+            const amt = Math.round(cap * (d / days));
             row.querySelector('.t2-days').innerText = d;
             row.querySelector('.t2-amt').innerText = amt.toLocaleString();
             total += amt;
@@ -242,10 +219,10 @@
     }
 
     function downloadSample() {
-        const csv = "\uFEFF職稱,姓名,最高上限,開始日期,結束日期\n署長,範例姓名,200000,2026-01-01,2026-12-31\n分署長,前任者,200000,2026-01-01,2026-06-30\n分署長,後任者,200000,2026-07-01,2026-12-31";
+        const csv = "\uFEFF職稱,姓名,最高上限,開始日期,結束日期\n署長,範例姓名,200000,2026-01-01,2026-12-31\n分署長,前任者,200000,2026-01-01,2026-06-30";
         const link = document.createElement("a");
         link.href = URL.createObjectURL(new Blob([csv], {type: 'text/csv;charset=utf-8;'}));
-        link.download = "主管獎勵金匯入範本.csv";
+        link.download = "主管獎勵金範本.csv";
         link.click();
     }
 
@@ -254,20 +231,12 @@
         reader.onload = function(ev) {
             const lines = ev.target.result.split(/\r?\n/);
             document.getElementById('t2-body').innerHTML = "";
-            lines.forEach((line, i) => {
-                if(i > 0 && line.trim()) {
-                    const p = line.split(",");
-                    addT2Row(p[0], p[1], p[2], p[3], p[4]);
-                }
-            });
+            lines.forEach((line, i) => { if(i > 0 && line.trim()) { const p = line.split(","); addT2Row(p[0], p[1], p[2], p[3], p[4]); } });
         };
         reader.readAsText(e.target.files[0], 'UTF-8');
     }
 
-    window.onload = () => { 
-        initT1(); 
-        addT2Row('署長', '', 200000); 
-    };
+    window.onload = () => { initT1(); addT2Row('署長', '', 200000); };
 </script>
 </body>
 </html>
