@@ -1,0 +1,255 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>團體獎勵金分配系統 (年度公版)</title>
+    <style>
+        body { font-family: "Microsoft JhengHei", sans-serif; margin: 10px; background-color: #f1f5f9; color: #1e293b; }
+        .container { max-width: 1350px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { color: #1e3a8a; text-align: center; margin-bottom: 20px; font-weight: 900; }
+        
+        /* 頂部設定區 */
+        .config-section { background: #eff6ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px dashed #3b82f6; display: flex; align-items: center; justify-content: center; gap: 20px; }
+        .config-section label { font-weight: bold; color: #1e40af; }
+        .main-input { padding: 8px; border: 2px solid #3b82f6; border-radius: 6px; font-size: 1.1em; font-weight: bold; width: 150px; text-align: right; }
+
+        .summary-box { display: flex; justify-content: space-around; background: #f8fafc; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 100; }
+        .amount { font-size: 1.4em; font-weight: bold; color: #e11d48; }
+        .remaining { color: #10b981; }
+
+        .btn-group { text-align: right; margin-bottom: 15px; }
+        button { padding: 10px 18px; margin-left: 10px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; color: white; transition: 0.2s; }
+        .btn-excel { background-color: #16a34a; }
+        .btn-print { background-color: #2563eb; }
+        button:hover { opacity: 0.8; }
+
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 1000px; }
+        th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: right; }
+        th { background-color: #1e293b; color: white; text-align: center; }
+        .sub-header { background-color: #334155; font-size: 0.9em; }
+        
+        /* 編輯中樣式 */
+        .input-perf { background-color: #f0fdf4; border: 1px solid #16a34a; width: 90px; }
+        .input-rank { background-color: #fef2f2; border: 1px solid #ef4444; width: 50px; text-align: center; }
+        .input-adj { background-color: #fffbeb; border: 1px solid #d97706; width: 85px; }
+        input { padding: 6px; border-radius: 4px; font-family: inherit; font-weight: bold; }
+
+        .rank-tag { font-weight: 900; font-size: 1.1em; display: block; margin-top: 4px; }
+        .total-row { background-color: #f1f5f9; font-weight: bold; }
+        .highlight-blue { color: #2563eb; }
+        .highlight-final { color: #be123c; font-size: 1.1em; }
+
+        @media print {
+            .btn-group, .summary-box, .config-section, input { display: none; }
+            .print-only { display: block !important; text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 10px; }
+            .val-show { display: inline !important; font-weight: bold; }
+            table { min-width: 100%; border: 1px solid black; }
+            th, td { border: 1px solid black; color: black !important; }
+        }
+        .print-only, .val-show { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="print-only">各分署團體獎勵金分配表 (年度核定本)</div>
+    <h2>團體獎勵金分配系統</h2>
+
+    <div class="config-section">
+        <div>
+            <label>年度預算 A (績效+評比): </label>
+            <input type="number" id="baseTotalA" class="main-input" value="22340000" oninput="calculate()">
+        </div>
+        <div>
+            <label>署長權限總額 B: </label>
+            <input type="number" id="baseTotalB" class="main-input" value="2386370" oninput="calculate()">
+        </div>
+    </div>
+    
+    <div class="summary-box">
+        <div style="text-align:center">
+            <div style="font-size:0.8em; color:#64748b">本年度分配總額 (A+B)</div>
+            <div class="amount" id="grandTotalDisplay">$ 0</div>
+        </div>
+        <div style="text-align:center">
+            <div style="font-size:0.8em; color:#64748b">署長分配剩餘額度</div>
+            <div class="amount remaining" id="remainingAmount">0</div>
+        </div>
+    </div>
+
+    <div class="btn-group">
+        <button class="btn-excel" onclick="exportToExcel()">📥 匯出 Excel</button>
+        <button class="btn-print" onclick="window.print()">🖨️ 列印報表</button>
+    </div>
+
+    <div class="table-responsive">
+        <table id="mainTable">
+            <thead>
+                <tr>
+                    <th rowspan="2">分署</th>
+                    <th colspan="3">1. 執行績效與評比分配 (A)</th>
+                    <th colspan="3">2. 署長權限調整分配 (B)</th>
+                    <th rowspan="2">調整後總額<br>(A+B)</th>
+                </tr>
+                <tr class="sub-header">
+                    <th>執行績效數額</th>
+                    <th>評比名次數額</th>
+                    <th>小計(A)</th>
+                    <th>預設平均</th>
+                    <th>增減調整</th>
+                    <th>小計(B)</th>
+                </tr>
+            </thead>
+            <tbody id="branchTable"></tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td style="text-align:center">合計</td>
+                    <td id="tPerf">0</td>
+                    <td id="tRank">0</td>
+                    <td id="tA">0</td>
+                    <td id="tAvg">0</td>
+                    <td id="tAdj">0</td>
+                    <td id="tB">0</td>
+                    <td id="tFinal" class="highlight-final">0</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<script>
+    // 初期預設資料 (使用者可隨時在網頁上更改)
+    const initialData = [
+        { name: "台北", perf: 1747631, rank: 2, totalA: 2243996 },
+        { name: "士林", perf: 1190195, rank: 9, totalA: 1509969 },
+        { name: "新北", perf: 2165752, rank: 5, totalA: 2547571 },
+        { name: "桃園", perf: 2073353, rank: 1, totalA: 2603127 },
+        { name: "新竹", perf: 1265802, rank: 3, totalA: 1719212 },
+        { name: "台中", perf: 1998116, rank: 4, totalA: 2394253 },
+        { name: "彰化", perf: 816532,  rank: 12, totalA: 1093352 },
+        { name: "嘉義", perf: 883721,  rank: 11, totalA: 1174858 },
+        { name: "台南", perf: 900968,  rank: 13, totalA: 1163469 },
+        { name: "高雄", perf: 1689321, rank: 10, totalA: 1994776 },
+        { name: "屏東", perf: 728757,  rank: 6, totalA: 1096258 },
+        { name: "花蓮", perf: 583540,  rank: 8, totalA: 922405 },
+        { name: "宜蘭", perf: 660902,  rank: 7, totalA: 1014084 }
+    ];
+
+    function init() {
+        const tbody = document.getElementById('branchTable');
+        initialData.forEach((b, i) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td style="text-align:center; font-weight:bold;">${b.name}</td>
+                <td>
+                    <input type="number" class="input-perf" value="${b.perf}" oninput="calculate()">
+                    <span class="val-show"></span>
+                </td>
+                <td>
+                    <input type="number" class="input-rank" value="${b.rank}" oninput="calculate()">
+                    <span class="rank-tag"></span>
+                    <div style="font-size:0.8em; color:#64748b" class="rank-amt-text"></div>
+                </td>
+                <td style="font-weight:bold;" class="subA-val">0</td>
+                <td class="avg-val">0</td>
+                <td>
+                    <input type="number" class="input-adj" value="0" oninput="calculate()">
+                    <span class="val-show"></span>
+                </td>
+                <td class="highlight-blue b-sub">0</td>
+                <td class="highlight-final r-total">0</td>
+            `;
+            tbody.appendChild(row);
+        });
+        calculate();
+    }
+
+    function calculate() {
+        const bTotalA = parseFloat(document.getElementById('baseTotalA').value) || 0;
+        const bTotalB = parseFloat(document.getElementById('baseTotalB').value) || 0;
+        
+        const perfs = document.querySelectorAll('.input-perf');
+        const ranks = document.querySelectorAll('.input-rank');
+        const adjs = document.querySelectorAll('.input-adj');
+        
+        const rankTags = document.querySelectorAll('.rank-tag');
+        const rankAmtTexts = document.querySelectorAll('.rank-amt-text');
+        const subAVals = document.querySelectorAll('.subA-val');
+        const avgVals = document.querySelectorAll('.avg-val');
+        const bSubs = document.querySelectorAll('.b-sub');
+        const rTotals = document.querySelectorAll('.r-total');
+        const shows = document.querySelectorAll('.val-show');
+
+        let sumPerf=0, sumRankAmt=0, sumA=0, sumAvg=0, sumAdj=0, sumB=0;
+        const count = perfs.length;
+        const avgB = Math.floor(bTotalB / count);
+        const diffB = bTotalB - (avgB * count);
+
+        perfs.forEach((el, i) => {
+            const vPerf = parseFloat(el.value) || 0;
+            const vRankNum = parseInt(ranks[i].value) || 0;
+            const vAdj = parseFloat(adjs[i].value) || 0;
+            const vAvg = (i === count - 1) ? avgB + diffB : avgB;
+            
+            // 這裡模擬：小計A是由使用者當初輸入的固定值，或者您可以在此定義公式
+            // 目前維持「小計A = 績效 + (隱含名次額度)」的邏輯，為了讓您好編輯，我們讓小計A自動聯動
+            // 假設名次額度 = 該分署在清單中的 totalA 減去績效 (年度更新時請直接改 perf 跟 totalA)
+            const vRankAmt = initialData[i].totalA - initialData[i].perf; 
+            const vSubA = vPerf + vRankAmt;
+            const vSubB = vAvg + vAdj;
+
+            // 更新畫面
+            rankTags[i].innerText = `第 ${vRankNum} 名`;
+            rankTags[i].style.color = vRankNum <= 3 ? "#e11d48" : "#475569";
+            rankAmtTexts[i].innerText = `$${vRankAmt.toLocaleString()}`;
+            subAVals[i].innerText = vSubA.toLocaleString();
+            avgVals[i].innerText = vAvg.toLocaleString();
+            bSubs[i].innerText = vSubB.toLocaleString();
+            rTotals[i].innerText = (vSubA + vSubB).toLocaleString();
+            
+            // 列印用隱藏欄位
+            shows[i*2].innerText = vPerf.toLocaleString();
+            shows[i*2+1].innerText = vAdj.toLocaleString();
+
+            sumPerf += vPerf; sumRankAmt += vRankAmt; sumA += vSubA;
+            sumAvg += vAvg; sumAdj += vAdj; sumB += vSubB;
+        });
+
+        const rem = bTotalB - sumB;
+        document.getElementById('remainingAmount').innerText = rem.toLocaleString();
+        document.getElementById('remainingAmount').style.color = rem === 0 ? "#10b981" : "#e11d48";
+        document.getElementById('grandTotalDisplay').innerText = `$${(sumA + sumB).toLocaleString()}`;
+
+        document.getElementById('tPerf').innerText = sumPerf.toLocaleString();
+        document.getElementById('tRank').innerText = sumRankAmt.toLocaleString();
+        document.getElementById('tA').innerText = sumA.toLocaleString();
+        document.getElementById('tAvg').innerText = sumAvg.toLocaleString();
+        document.getElementById('tAdj').innerText = sumAdj.toLocaleString();
+        document.getElementById('tB').innerText = sumB.toLocaleString();
+        document.getElementById('tFinal').innerText = (sumA + sumB).toLocaleString();
+    }
+
+    function exportToExcel() {
+        let csv = "\uFEFF分署,執行績效,名次,評比金額,小計A,預設B,調整B,小計B,調整後總額\n";
+        const rows = document.querySelectorAll("#branchTable tr");
+        rows.forEach((row, i) => {
+            const tds = row.querySelectorAll("td");
+            const vPerf = row.querySelector('.input-perf').value;
+            const vRank = row.querySelector('.input-rank').value;
+            const vAdj = row.querySelector('.input-adj').value;
+            csv += `${tds[0].innerText},${vPerf},第${vRank}名,${tds[2].querySelector('.rank-amt-text').innerText.replace(/[$,]/g,'')},${tds[3].innerText.replace(/,/g,'')},${tds[4].innerText.replace(/,/g,'')},${vAdj},${tds[6].innerText.replace(/,/g,'')},${tds[7].innerText.replace(/,/g,'')}\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `獎勵金分配表_${new Date().getFullYear()}.csv`;
+        link.click();
+    }
+
+    window.onload = init;
+</script>
+
+</body>
+</html>
